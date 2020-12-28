@@ -1,0 +1,41 @@
+# Test Config YML File
+
+# When you run dbt test, dbt iterates through your YAML files, and constructs a query for each test.
+# Each query will return the number of records that fail the test. If this number is 0, then the test is successful.
+
+
+version: 2                    # the only supported version for these files
+
+models:
+  - name: customers           # name of the model to test
+    description: "{{ doc('customers') }}"
+    columns:                  # name of columns to test
+      - name: customer_id
+        description: primary key of the model
+        tests:                # kinds of tests performed
+          - unique                # look for duplicated values
+          - not_null              # look for NULL values
+
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:         # accepted values test
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:            # foreign key test
+              to: ref('stg_customers')
+              field: customer_id
